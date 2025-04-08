@@ -37,6 +37,7 @@ sim.spawn <- function(nsim=300,L,x0,k,samp.size,samp.sizesd,obs.cv,day.start,day
     # simulated values
     simgsi <- matrix(NA,ncol=nsim,nrow=nrow(truegsi))
     simprop <- matrix(NA,ncol=nsim,nrow=nrow(trueprop))
+    simco <- matrix(NA,ncol=nsim,nrow=3)
     
     daytarget <- seq(day.start,day.end,day.freq)
     print(paste0("number of samples: ",length(daytarget)))
@@ -52,12 +53,13 @@ sim.spawn <- function(nsim=300,L,x0,k,samp.size,samp.sizesd,obs.cv,day.start,day
             points(dat$doy,dat$obs,col='red',pch=16)
         }
         
-        model <- nls(obs ~ SSlogis(doy, a, b, c), data = dat,control = list(maxiter = 1000))
+        model <- nls(obs ~ SSlogis(doy, asym, xmid, scal), data = dat,control = list(maxiter = 1000))
         co <- coef(model)
         
         prop <- get.season(co[1],co[2],co[3])
         simprop[,i] <<- prop[,2]
         simgsi[,i] <<- attr(prop,"GSIpred")[,2]
+        simco[,i] <<- co
         
         if(plot){
             if(i==1){
@@ -73,6 +75,7 @@ sim.spawn <- function(nsim=300,L,x0,k,samp.size,samp.sizesd,obs.cv,day.start,day
     simprop <- cbind(trueprop,simprop)
     
     attr(simprop,'GSIpred') <- simgsi
+    attr(simprop,'coef') <- simco
     return(simprop)
 }
 
